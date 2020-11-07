@@ -4,7 +4,7 @@ pragma solidity >=0.4.25 <0.7.2;
 
 /* SafeMath functions */
 
-contract SafeMath {
+contract MathSafe {
     
   function safeMul(uint256 a, uint256 b) pure internal returns (uint256) {
     uint256 c = a * b;
@@ -32,7 +32,7 @@ contract SafeMath {
 
 }
 
-interface IWORK {
+interface IPOTATO {
     
     function totalSupply() external view returns (uint256);
 
@@ -86,24 +86,21 @@ interface IWORK {
      */
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     
-    
-    /**
-     * @dev burns 'amount' tokens from the total supply & from his address
-     * 
-     */
+    function burn(uint256 amount) external returns (bool);
+
     
 }
 
-contract WORK is SafeMath,IWORK {
+contract POTATO is MathSafe,IPOTATO {
     
-    string public constant name = "Worker";
-    string public constant symbol = "WORK";
-    uint256 public constant decimals = 0;
+    string public constant name = "Potato";
+    string public constant symbol = "POTAT";
+    uint256 public constant decimals = 18;
     uint256 public override totalSupply;
     address public owner;
 
-    constructor(){
-        uint256 initalSupply = 20000000;
+    constructor() public{
+        uint256 initalSupply = MathSafe.safeMul(40000000,10**18);
         owner = msg.sender;
         balanceOf[msg.sender]=initalSupply;
         totalSupply+=initalSupply;
@@ -116,22 +113,31 @@ contract WORK is SafeMath,IWORK {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint value);
+    event Burn(address indexed from, uint256 value);
 
     
     function transfer(address _reciever, uint256 _value) public override returns (bool){
          require(balanceOf[msg.sender]>_value);
-         balanceOf[msg.sender] = SafeMath.safeSub(balanceOf[msg.sender],_value);
-         balanceOf[_reciever] = SafeMath.safeAdd(balanceOf[_reciever],_value);
+         balanceOf[msg.sender] = MathSafe.safeSub(balanceOf[msg.sender],_value);
+         balanceOf[_reciever] = MathSafe.safeAdd(balanceOf[_reciever],_value);
          emit Transfer(msg.sender,_reciever,_value);
+         return true;
+    }
+    
+    function burn(uint256 _value) public override returns(bool){
+         require(balanceOf[msg.sender]>_value);
+         balanceOf[msg.sender] = MathSafe.safeSub(balanceOf[msg.sender],_value);
+         totalSupply = MathSafe.safeSub(totalSupply,_value);
+         emit Burn(msg.sender,_value);
          return true;
     }
     
      function transferFrom( address _from, address _to, uint256 _amount )public override returns (bool) {
      require( _to != address(0));
      require(balanceOf[_from] >= _amount && allowed[_from][msg.sender] >= _amount && _amount >= 0);
-     balanceOf[_from] = SafeMath.safeSub(balanceOf[_from],_amount);
-     allowed[_from][msg.sender] = SafeMath.safeSub(allowed[_from][msg.sender],_amount);
-     balanceOf[_to] = SafeMath.safeAdd(balanceOf[_to],_amount);
+     balanceOf[_from] = MathSafe.safeSub(balanceOf[_from],_amount);
+     allowed[_from][msg.sender] = MathSafe.safeSub(allowed[_from][msg.sender],_amount);
+     balanceOf[_to] = MathSafe.safeAdd(balanceOf[_to],_amount);
      emit Transfer(_from, _to, _amount);
      return true;
      }
@@ -145,9 +151,9 @@ contract WORK is SafeMath,IWORK {
      
      function reverseApprove(address _spender, uint256 _amount) public returns (bool){
         require( _spender != address(0));
-        if(SafeMath.safeSub(allowed[msg.sender][_spender],_amount) >= 0){
-        allowed[msg.sender][_spender] = SafeMath.safeSub(allowed[msg.sender][_spender],_amount);
-        emit  Approval(msg.sender, _spender, SafeMath.safeSub(allowed[msg.sender][_spender],_amount));
+        if(MathSafe.safeSub(allowed[msg.sender][_spender],_amount) >= 0){
+        allowed[msg.sender][_spender] = MathSafe.safeSub(allowed[msg.sender][_spender],_amount);
+        emit  Approval(msg.sender, _spender, MathSafe.safeSub(allowed[msg.sender][_spender],_amount));
         return true;
         }
         return false;

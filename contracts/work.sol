@@ -4,7 +4,7 @@ pragma solidity >=0.4.25 <0.7.2;
 
 /* SafeMath functions */
 
-contract SafeMath {
+contract WorkMath {
     
   function safeMul(uint256 a, uint256 b) pure internal returns (uint256) {
     uint256 c = a * b;
@@ -32,7 +32,7 @@ contract SafeMath {
 
 }
 
-interface IPOTATO {
+interface IWORK {
     
     function totalSupply() external view returns (uint256);
 
@@ -86,18 +86,26 @@ interface IPOTATO {
      */
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool);
     
+    
+    /**
+     * @dev burns 'amount' tokens from the total supply & from his address
+     * 
+     */
+    
+    function burn(uint256 amount) external returns (bool);
+    
 }
 
-contract POTATO is SafeMath,IPOTATO {
+contract WORK is WorkMath,IWORK {
     
-    string public constant name = "Potato";
-    string public constant symbol = "POTAT";
-    uint256 public constant decimals = 0;
+    string public constant name = "Worker";
+    string public constant symbol = "WORK";
+    uint256 public constant decimals = 18;
     uint256 public override totalSupply;
     address public owner;
 
-    constructor(){
-        uint256 initalSupply = 40000000;
+    constructor() public{
+        uint256 initalSupply = WorkMath.safeMul(20000000,10**18);
         owner = msg.sender;
         balanceOf[msg.sender]=initalSupply;
         totalSupply+=initalSupply;
@@ -110,12 +118,13 @@ contract POTATO is SafeMath,IPOTATO {
 
     event Transfer(address indexed from, address indexed to, uint256 value);
     event Approval(address indexed owner, address indexed spender, uint value);
+    event Burn(address indexed from, uint256 value);
 
     
     function transfer(address _reciever, uint256 _value) public override returns (bool){
          require(balanceOf[msg.sender]>_value);
-         balanceOf[msg.sender] = SafeMath.safeSub(balanceOf[msg.sender],_value);
-         balanceOf[_reciever] = SafeMath.safeAdd(balanceOf[_reciever],_value);
+         balanceOf[msg.sender] = WorkMath.safeSub(balanceOf[msg.sender],_value);
+         balanceOf[_reciever] = WorkMath.safeAdd(balanceOf[_reciever],_value);
          emit Transfer(msg.sender,_reciever,_value);
          return true;
     }
@@ -123,12 +132,20 @@ contract POTATO is SafeMath,IPOTATO {
      function transferFrom( address _from, address _to, uint256 _amount )public override returns (bool) {
      require( _to != address(0));
      require(balanceOf[_from] >= _amount && allowed[_from][msg.sender] >= _amount && _amount >= 0);
-     balanceOf[_from] = SafeMath.safeSub(balanceOf[_from],_amount);
-     allowed[_from][msg.sender] = SafeMath.safeSub(allowed[_from][msg.sender],_amount);
-     balanceOf[_to] = SafeMath.safeAdd(balanceOf[_to],_amount);
+     balanceOf[_from] = WorkMath.safeSub(balanceOf[_from],_amount);
+     allowed[_from][msg.sender] = WorkMath.safeSub(allowed[_from][msg.sender],_amount);
+     balanceOf[_to] = WorkMath.safeAdd(balanceOf[_to],_amount);
      emit Transfer(_from, _to, _amount);
      return true;
      }
+     
+     function burn(uint256 _value) public override returns(bool){
+         require(balanceOf[msg.sender]>_value);
+         balanceOf[msg.sender] = WorkMath.safeSub(balanceOf[msg.sender],_value);
+         totalSupply = WorkMath.safeSub(totalSupply,_value);
+         emit Burn(msg.sender,_value);
+         return true;
+    }
      
     function approve(address _spender, uint256 _amount) public override returns (bool) {
          require( _spender != address(0));
@@ -139,9 +156,9 @@ contract POTATO is SafeMath,IPOTATO {
      
      function reverseApprove(address _spender, uint256 _amount) public returns (bool){
         require( _spender != address(0));
-        if(SafeMath.safeSub(allowed[msg.sender][_spender],_amount) >= 0){
-        allowed[msg.sender][_spender] = SafeMath.safeSub(allowed[msg.sender][_spender],_amount);
-        emit  Approval(msg.sender, _spender, SafeMath.safeSub(allowed[msg.sender][_spender],_amount));
+        if(WorkMath.safeSub(allowed[msg.sender][_spender],_amount) >= 0){
+        allowed[msg.sender][_spender] = WorkMath.safeSub(allowed[msg.sender][_spender],_amount);
+        emit  Approval(msg.sender, _spender, WorkMath.safeSub(allowed[msg.sender][_spender],_amount));
         return true;
         }
         return false;
